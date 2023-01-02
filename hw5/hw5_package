@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+ZIP_FILE=hw5.zip
+REQUIRED_FILES=("bookPairs.py" "titlePairs.py")
+OPTIONAL_FILES="README.txt"
+DATA_FILE1="/home/cs143/data/goodreads.dat"
+DATA_FILE2="/home/cs143/data/goodreads_titles.dat"
+DATA_FILE3="/home/cs143/data/part1.dat"
+OUTPUT1="/home/cs143/output1"
+OUTPUT2="/home/cs143/output2"
+
+CUR_DIR=$(pwd -P)
+SRC_DIR=${CUR_DIR}
+
+#error function
+function error_exit()
+{
+   echo -e "ERROR: $1" 1>&2
+   rm -rf ${TMP_DIR}
+   exit 1
+}
+
+# make sure running in container
+if [ `whoami` != "cs143" ]; then
+    error_exit "You need to run this script within the container"
+fi
+
+# if the source directory is passed as parameter, use it
+if [ $# -eq 1 ]; then
+    SRC_DIR=$1
+fi
+
+# remove the zip file if it already exists
+if [ -f ${CUR_DIR}/${ZIP_FILE} ]; then
+    rm -f ${CUR_DIR}/${ZIP_FILE}
+fi
+
+# change to the directory with the submission files
+cd ${SRC_DIR}
+
+# check the existence of the required files
+for FILE in ${REQUIRED_FILES[@]}
+do
+    if [ ! -f ${FILE} ]; then
+        echo "ERROR: Cannot find ${FILE} in ${DIR}" 1>&2
+        exit 1
+    fi
+done
+
+# check the existence of the optional files
+TO_ADD=""
+for FILE in ${OPTIONAL_FILES}
+do
+    if [ -f ${FILE} ]; then
+	TO_ADD+=" ${FILE}"
+    fi
+done
+
+# check if data file 1 is referenced in bookPairs.py
+grep ${DATA_FILE1} bookPairs.py &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "WARNING: The path ${DATA_FILE1} is not referenced in bookPairs.py."
+    echo "         Are you sure you are using the correct path?"
+fi
+
+# check if data file 2 is referenced in titlePairs.py
+grep ${DATA_FILE2} titlePairs.py &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "WARNING: The path ${DATA_FILE2} is not referenced in titlePairs.py."
+    echo "         Are you sure you are using the correct path?"
+fi
+
+# check if data file 3 is references in titlePairs.py
+grep ${DATA_FILE3} titlePairs.py &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "WARNING: The path ${DATA_FILE3} is not referenced in titlePairs.py."
+    echo "         Are you sure you are using the correct path?"
+fi
+
+# check if output 1 is references in bookPairs.py
+grep ${OUTPUT1} bookPairs.py &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "WARNING: The path ${OUTPUT1} is not referenced in titlePairs.py."
+    echo "         Are you sure you are using the correct path?"
+fi
+
+# check if output 2 is references in bookPairs.py
+grep ${OUTPUT2} titlePairs.py &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "WARNING: The path ${OUTPUT2} is not referenced in titlePairs.py."
+    echo "         Are you sure you are using the correct path?"
+fi
+
+echo "zip ${ZIP_FILE} ${REQUIRED_FILES[@]} ${TO_ADD}"
+zip ${CUR_DIR}/${ZIP_FILE} ${REQUIRED_FILES[@]} ${TO_ADD}
+if [ $? -ne 0 ]; then
+    error_exit "Create ${CUR_DIR}/${ZIP_FILE} failed, check for error messages in console."
+fi
+
+echo "[SUCCESS] Created '${CUR_DIR}/${ZIP_FILE}'"
+
+exit 0
